@@ -52,7 +52,7 @@ jobs:
       with:
         host: ${{ secrets.EC2_HOST }}  # Set your EC2 instance IP or hostname
         username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}  # Ensure your private key is base64-encoded in GitHub secrets
+        key: ${{ secrets.AWS_PRIVATE_KEY }}  # Ensure your private key is base64-encoded in GitHub secrets
         port: ${{ secrets.SSH_PORT }}  # SSH port, default is usually 22
         script: |
           # Pull the latest Docker image
