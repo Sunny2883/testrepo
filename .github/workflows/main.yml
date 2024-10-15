@@ -1,1 +1,70 @@
+name: Build and Deploy .NET App to AWS EC2
 
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      ENV_JSON: ${{ secrets.ENV_JSON }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '7.x' # Specify your .NET version
+
+    - name: Build .NET project
+      run: dotnet build
+
+    - name: Build Docker image
+      run: |
+        docker build -t $DOCKER_USERNAME/dotnet-app:latest .
+
+    - name: Log in to Docker Hub
+      run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+    - name: Push Docker image to Docker Hub
+      run: docker push $DOCKER_USERNAME/dotnet-app:latest
+
+    - name: Create .env file from ENV_JSON
+      run: |
+        echo ${{ secrets.ENV_JSON }} > .env
+
+    - name: AWS login
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2
+
+    - name: SSH into EC2 instance and deploy container
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}  # Set your EC2 instance IP or hostname
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}  # Ensure your private key is base64-encoded in GitHub secrets
+        port: ${{ secrets.SSH_PORT }}  # SSH port, default is usually 22
+        script: |
+          # Pull the latest Docker image
+          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+          docker pull $DOCKER_USERNAME/dotnet-app:latest
+          
+          # Stop and remove any existing container
+          docker stop dotnet-app || true
+          docker rm dotnet-app || true
+          
+          # Run the new container
+          docker run --env-file /home/${{ secrets.EC2_USERNAME }}/.env -p 8080:8080 -d --name dotnet-app $DOCKER_USERNAME/dotnet-app:latest
+          
+          # Optional: Clean up older images if needed
+          # docker image prune -f
