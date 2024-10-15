@@ -1,0 +1,105 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:ap-south-1:396608771618:task-definition/Assignment_family_1:87",
+    "containerDefinitions": [
+        {
+            "name": "Assignment_task_1",
+            "image": "396608771618.dkr.ecr.ap-south-1.amazonaws.com/projectrepo",
+            "cpu": 128,
+            "memory": 256,
+            "portMappings": [
+                {
+                    "containerPort": 8080,
+                    "hostPort": 0,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "secrets": [
+                {
+                    "name": "AllowedHosts",
+                    "valueFrom": "arn:aws:ssm:ap-south-1:396608771618:parameter/AllowedHosts"
+                },
+                {
+                    "name": "ConnectionStrings__DefaultConnection",
+                    "valueFrom": "arn:aws:ssm:ap-south-1:396608771618:parameter/ConnectionStrings__DefaultConnection"
+                },
+                {
+                    "name": "Logging__LogLevel__Default",
+                    "valueFrom": "arn:aws:ssm:ap-south-1:396608771618:parameter/Logging__LogLevel__Default"
+                },
+                {
+                    "name": "Logging__LogLevel__Microsoft.AspNetCore",
+                    "valueFrom": "arn:aws:ssm:ap-south-1:396608771618:parameter/Logging__LogLevel__Microsoft.AspNetCore"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "projectloggroup",
+                    "awslogs-region": "ap-south-1",
+                    "awslogs-stream-prefix": "assignment"
+                }
+            },
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "curl -f http://localhost:8080/api/books || exit 1"
+                ],
+                "interval": 30,
+                "timeout": 5,
+                "retries": 3,
+                "startPeriod": 0
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "Assignment_family_1",
+    "taskRoleArn": "arn:aws:iam::396608771618:role/ecsTaskRolenew",
+    "executionRoleArn": "arn:aws:iam::396608771618:role/ecsTaskExecutionRole2",
+    "networkMode": "bridge",
+    "revision": 87,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
+        },
+        {
+            "name": "ecs.capability.container-health-check"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "ecs.capability.secrets.ssm.environment-variables"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EXTERNAL",
+        "EC2"
+    ],
+    "cpu": "256",
+    "memory": "512",
+    "registeredAt": "2024-09-17T09:25:10.239Z",
+    "registeredBy": "arn:aws:iam::396608771618:user/Assignment_1",
+    "tags": []
+}
