@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: dev  # Replace 'production' with your GitHub Environment name
+    environment: dev  
     
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
