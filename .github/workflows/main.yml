@@ -22,8 +22,7 @@ jobs:
     - name: Set up .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '8.0' # Specify your .NET version
-
+        dotnet-version: '8.0' 
     - name: Build .NET project
       run: dotnet build
 
@@ -39,16 +38,12 @@ jobs:
 
     - name: Create .env file from ENV_JSON
       run: |
-       # Print the ENV_JSON content to debug
-        echo "Fetching ENV_JSON from environment..."
-        echo "ENV_JSON content: $ENV_JSON"
 
         # Convert JSON to .env format
         echo "$ENV_JSON" | jq -r 'to_entries | map("\(.key)=\(.value|tostring)") | .[]' > .env
         
         # Verify the .env content
-        echo "Content of .env file:"
-        cat .env
+
         echo "Copying .env file to EC2 instance..."
         echo "$PRIVATE_KEY" > github-ec2.pem && chmod 600 github-ec2.pem
         scp -o StrictHostKeyChecking=no -i github-ec2.pem .env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/.env
