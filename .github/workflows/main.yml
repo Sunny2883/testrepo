@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: production # Replace 'production' with your GitHub Environment name
+    environment: production/dev  # Replace 'production' with your GitHub Environment name
 
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -40,7 +40,7 @@ jobs:
     - name: Create .env file from ENV_JSON
       run: |
         # Convert JSON to .env format
-        echo "${{ vars.ENV_JSON }}" | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' > .env
+        echo "$ENV_JSON" | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' > .env
         
         # Verify the .env content
         echo "Content of .env file:"
@@ -61,15 +61,22 @@ jobs:
         key: ${{ secrets.AWS_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
         script: |
+          # Check if the container is running and stop it if it is
+          if [ "$(docker ps -q -f name=dotnet-app)" ]; then
+             docker stop dotnet-app
+          fi
+
+          # Check if the container exists and remove it
+          if [ "$(docker ps -aq -f name=dotnet-app)" ]; then
+            docker rm dotnet-app
+          fi
           # Copy the .env file to the server
           echo "$ENV_JSON" > /home/${{ secrets.EC2_USERNAME }}/.env
           # Log in to Docker and deploy the container
           docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
           docker pull $DOCKER_USERNAME/dotnet-app:latest
           
-          # Stop and remove any existing container
-          docker stop dotnet-app || true
-          docker rm dotnet-app || true
+  
           
           # Run the new container with the .env file
           docker run --env-file /home/${{ secrets.EC2_USERNAME }}/.env -p 8080:8080 -d --name dotnet-app $DOCKER_USERNAME/dotnet-app:latest
