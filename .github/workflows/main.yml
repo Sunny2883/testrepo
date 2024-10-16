@@ -32,7 +32,7 @@ jobs:
         docker build -t $DOCKER_USERNAME/dotnet-app:latest --label project=dotnet-app .
 
     - name: Log in to Docker Hub
-      run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+      run: echo  | docker login -u  --password-stdin
 
     - name: Push Docker image to Docker Hub
       run: docker push $DOCKER_USERNAME/dotnet-app:latest
