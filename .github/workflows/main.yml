@@ -62,8 +62,7 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script: |
           # Copy the .env file to the server
-          scp .env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/.env
-          
+          echo "$ENV_JSON" > /home/${{ secrets.EC2_USERNAME }}/.env
           # Log in to Docker and deploy the container
           docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
           docker pull $DOCKER_USERNAME/dotnet-app:latest
