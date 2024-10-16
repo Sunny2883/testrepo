@@ -62,8 +62,7 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script: |
 
-          # Copy the .env file to the server
-          echo "$ENV_JSON" > /home/${{ secrets.EC2_USERNAME }}/.env
+
 
           docker pull $DOCKER_USERNAME/dotnet-app:latest
           
