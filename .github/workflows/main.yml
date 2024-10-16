@@ -32,7 +32,7 @@ jobs:
         docker build -t $DOCKER_USERNAME/dotnet-app:latest --label project=dotnet-app .
 
     - name: Log in to Docker Hub
-      run: echo  | docker login -u  --password-stdin
+      run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
     - name: Push Docker image to Docker Hub
       run: docker push $DOCKER_USERNAME/dotnet-app:latest
@@ -96,3 +96,23 @@ jobs:
         body: '${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}'
         to: pankajkumarnikk@gmail.com
         from: sunny  # Your name or the name you'd like to show      
+   
+    - name: Check application health
+      id: health-check
+      run: |
+        response=$(curl -s -o /dev/null -w "%{http_code}" https://google.com)
+        echo "Response code: $response"
+        echo "::set-output name=status::$response"
+
+    - name: Send success email notification
+      if: steps.health-check.outputs.status == '200'
+      uses: dawidd6/action-send-mail@v2
+      with:
+        server_address: smtp.gmail.com
+        server_port: 465
+        username: ${{ secrets.EMAIL_USERNAME }}  # Your actual email address
+        password: ${{ secrets.EMAIL_APP_PASSWORD }}  # Use App Password here
+        subject: '${{ github.job }} job of ${{ github.repository }} has succeeded'
+        body: '${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has succeeded!'
+        to: pankajkumarnikk@gmail.com
+        from: sunny  
