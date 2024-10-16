@@ -23,12 +23,13 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '8.0' 
+      
     - name: Build .NET project
       run: dotnet build
 
     - name: Build Docker image
       run: |
-        docker build -t $DOCKER_USERNAME/dotnet-app:latest .
+        docker build -t $DOCKER_USERNAME/dotnet-app:latest --label project=dotnet-app .
 
     - name: Log in to Docker Hub
       run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
@@ -38,15 +39,14 @@ jobs:
 
     - name: Create .env file from ENV_JSON
       run: |
-
         # Convert JSON to .env format
         echo "$ENV_JSON" | jq -r 'to_entries | map("\(.key)=\(.value|tostring)") | .[]' > .env
         
         # Verify the .env content
-
         echo "Copying .env file to EC2 instance..."
         echo "$PRIVATE_KEY" > github-ec2.pem && chmod 600 github-ec2.pem
         scp -o StrictHostKeyChecking=no -i github-ec2.pem .env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/.env
+
     - name: AWS login
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -62,8 +62,12 @@ jobs:
         key: ${{ secrets.AWS_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
         script: |
-          scp .env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/.env
+          # Copy .env file to the EC2 instance
+          scp -o StrictHostKeyChecking=no -i github-ec2.pem .env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/.env
+          
+          # Pull the latest Docker image
           docker pull "${{ secrets.DOCKER_USERNAME }}/dotnet-app:latest"
+
           # Stop and remove the existing container if it exists
           if [ $(docker ps -q -f name=dotnet-app) ]; then
             echo "Stopping the existing container"
@@ -71,4 +75,11 @@ jobs:
             docker rm dotnet-app
           fi
           
+          # Run the new container
           docker run --env-file /home/${{ secrets.EC2_USERNAME }}/.env -p 8080:8080 -d --name dotnet-app "${{ secrets.DOCKER_USERNAME }}/dotnet-app:latest"
+
+          # Remove .env file after deployment
+          rm /home/${{ secrets.EC2_USERNAME }}/.env
+
+          # Prune all unused Docker resources for this project
+          docker system prune -f --filter "label=project=dotnet-app"
