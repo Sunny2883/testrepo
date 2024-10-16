@@ -72,8 +72,7 @@ jobs:
           fi
           # Copy the .env file to the server
           echo "$ENV_JSON" > /home/${{ secrets.EC2_USERNAME }}/.env
-          # Log in to Docker and deploy the container
-          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+
           docker pull $DOCKER_USERNAME/dotnet-app:latest
           
   
