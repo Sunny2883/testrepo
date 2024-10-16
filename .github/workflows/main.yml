@@ -39,18 +39,17 @@ jobs:
 
     - name: Create .env file from ENV_JSON
       run: |
-        run: |
-        # Print the ENV_JSON content to debug
-        echo "ENV_JSON content: $ENV_JSON"
-    
+       # Print the ENV_JSON content to debug
+        echo "Fetching ENV_JSON from environment..."
+        echo "ENV_JSON content: ${{ github.event.environment.ENV_JSON }}"
+
         # Convert JSON to .env format
-        echo "$ENV_JSON" | jq -r 'to_entries | map("\(.key)=\(.value|tostring)") | .[]' > .env
-    
+        echo "${{ github.event.environment.ENV_JSON }}" | jq -r 'to_entries | map("\(.key)=\(.value|tostring)") | .[]' > .env
+        
         # Verify the .env content
         echo "Content of .env file:"
         cat .env
-      env:
-       ENV_JSON: ${{ secrets.ENV_JSON }} 
+    
     - name: AWS login
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -66,13 +65,7 @@ jobs:
         key: ${{ secrets.AWS_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
         script: |
-
-
-          
-          
-          docker pull "${{ secrets.DOCKER_USERNAME }}/dotnet-app:latest
-          
-  
-          
+          docker pull "${{ secrets.DOCKER_USERNAME }}/dotnet-app:latest"
+      
           # Run the new container with the .env file
-          docker run --env-file /home/${{ secrets.EC2_USERNAME }}/.env -p 8080:8080 -d --name dotnet-app "${{ secrets.DOCKER_USERNAME }}/dotnet-app:latest
+          docker run --env-file /home/${{ secrets.EC2_USERNAME }}/.env -p 8080:8080 -d --name dotnet-app "${{ secrets.DOCKER_USERNAME }}/dotnet-app:latest"
