@@ -64,7 +64,7 @@ jobs:
 
 
 
-          docker pull $DOCKER_USERNAME/dotnet-app:latest
+          docker pull sunny2883/dotnet-app:latest
           
   
           
