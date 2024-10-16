@@ -75,5 +75,5 @@ jobs:
             docker stop dotnet-app
             docker rm dotnet-app
           fi
-          # Run the new container with the .env file
+          
           docker run --env-file /home/${{ secrets.EC2_USERNAME }}/.env -p 8080:8080 -d --name dotnet-app "${{ secrets.DOCKER_USERNAME }}/dotnet-app:latest"
