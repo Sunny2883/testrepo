@@ -14,7 +14,7 @@ jobs:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       ENV_JSON: ${{ vars.ENV_JSON }} # Accessing the environment-specific variable
-
+      PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -50,7 +50,8 @@ jobs:
         echo "Content of .env file:"
         cat .env
         echo "Copying .env file to EC2 instance..."
-        scp -i ${{ secrets.AWS_PRIVATE_KEY }} .env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/.env
+        echo "$PRIVATE_KEY" > github-ec2.pem && chmod 600 github-ec2.pem
+        scp -o StrictHostKeyChecking=no -i github-ec2.pem .env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/.env
     - name: AWS login
       uses: aws-actions/configure-aws-credentials@v4
       with:
