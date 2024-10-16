@@ -13,7 +13,7 @@ jobs:
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      ENV_JSON: ${{ vars.ENV_JSON }} # Accessing the environment-specific variable
+      ENV_JSON: ${{ github.event.environment.ENV_JSON }} # Accessing the environment-specific variable
 
     steps:
     - name: Checkout code
@@ -45,6 +45,8 @@ jobs:
         # Verify the .env content
         echo "Content of .env file:"
         cat .env
+        env:
+          ENV_JSON: ${{ github.event.environment.ENV_JSON }} 
 
     - name: AWS login
       uses: aws-actions/configure-aws-credentials@v4
@@ -63,8 +65,9 @@ jobs:
         script: |
 
 
-
-          docker pull sunny2883/dotnet-app:latest
+          
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          docker pull $DOCKER_USERNAME/dotnet-app:latest
           
   
           
