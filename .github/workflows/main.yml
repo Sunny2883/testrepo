@@ -55,7 +55,9 @@ jobs:
         key: ${{ secrets.AWS_PRIVATE_KEY }}  # Ensure your private key is base64-encoded in GitHub secrets
         port: ${{ secrets.SSH_PORT }}  # SSH port, default is usually 22
         script: |
+          sudo usermod -aG docker $USER
           # Pull the latest Docker image
+          echo "${{ secrets.ENV_JSON }}" > /home/${{ secrets.EC2_USERNAME }}/.env
           docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
           docker pull $DOCKER_USERNAME/dotnet-app:latest
           
