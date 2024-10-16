@@ -50,7 +50,7 @@ jobs:
         echo "Content of .env file:"
         cat .env
         echo "Copying .env file to EC2 instance..."
-        scp -o StrictHostKeyChecking=no -i ${{ secrets.AWS_PRIVATE_KEY }} .env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/.env
+        scp -i ${{ secrets.AWS_PRIVATE_KEY }} .env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/.env
     - name: AWS login
       uses: aws-actions/configure-aws-credentials@v4
       with:
