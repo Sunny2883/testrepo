@@ -45,7 +45,7 @@ jobs:
         # Verify the .env content
         echo "Copying .env file to EC2 instance..."
         echo "$PRIVATE_KEY" > github-ec2.pem && chmod 600 github-ec2.pem
-        scp -o StrictHostKeyChecking=no -i github-ec2.pem .env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/.env
+        scp -q -o StrictHostKeyChecking=no -i github-ec2.pem .env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/.env
 
     - name: AWS login
       uses: aws-actions/configure-aws-credentials@v4
