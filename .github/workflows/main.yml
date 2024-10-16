@@ -40,7 +40,7 @@ jobs:
     - name: Create .env file from ENV_JSON
       run: |
         # Convert JSON to .env format
-         jq -r 'to_entries | map("\(.key)=\(.value|tostring)") | .[]' > .env
+         jq -r 'to_entries | map("\(.key)=\(.value|tostring)") | .[]' <<< "$ENV_JSON" > .env
         
         # Verify the .env content
         echo "Copying .env file to EC2 instance..."
