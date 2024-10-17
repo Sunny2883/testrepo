@@ -25,7 +25,8 @@ jobs:
       with:
         dotnet-version: '8.0'
 
-    - name: Store current running image
+    - name: Get the currently running image
+      id: fetch-current-image
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -33,10 +34,15 @@ jobs:
         key: ${{ secrets.AWS_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
         script: |
-          # Get the currently running image
+          # Extract the current image from the .env file
           CURRENT_IMAGE=$(grep 'Bookstore_IMAGE_DEV=' /home/${{ secrets.EC2_USERNAME }}/Bookstore/.env | cut -d '=' -f2)
-          echo "CURRENT_IMAGE=$CURRENT_IMAGE" >> $GITHUB_ENV
-          echo "Stored the current image: $CURRENT_IMAGE"
+          echo "::set-output name=current_image::$CURRENT_IMAGE"
+      # Capture the output and store it in a GitHub Actions environment variable
+      
+      # Set the environment variable for future steps
+    - name: Store the current image in GitHub Actions environment
+      run: echo "CURRENT_IMAGE=${{ steps.fetch-current-image.outputs.current_image_output }}" >> $GITHUB_ENV
+      
 
     # - name: Build Docker image
     #   id: be-image
