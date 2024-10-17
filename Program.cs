@@ -1,10 +1,14 @@
 using Microsoft.EntityFrameworkCore;
+using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Load environment variables from .env file
+DotNetEnv.Env.Load();
+
+// Configure services
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTIONSTRINGS__DEFAULTCONNECTION")));
 
 // Add CORS configuration
 builder.Services.AddCors(options =>
@@ -39,7 +43,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -53,4 +57,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+// Get URLs from environment variable
+var urls = Environment.GetEnvironmentVariable("URLS") ?? "http://*:5000";
+app.Run(urls);
