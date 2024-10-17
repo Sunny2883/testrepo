@@ -43,16 +43,16 @@ jobs:
           "CONNECTIONSTRINGS__DEFAULTCONNECTION=\($conn)\nURLS=\($url)"
         ' > var.env
         
-    - name: Copy .env File to VM
-      uses: appleboy/scp-action@v0.1.4
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.AWS_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
-        overwrite: true
-        source: .env
-        target: /home/${{ secrets.EC2_USERNAME }}/.env
+    # - name: Copy .env File to VM
+    #   uses: appleboy/scp-action@v0.1.4
+    #   with:
+    #     host: ${{ secrets.EC2_HOST }}
+    #     username: ${{ secrets.EC2_USERNAME }}
+    #     key: ${{ secrets.AWS_PRIVATE_KEY }}
+    #     port: ${{ secrets.SSH_PORT }}
+    #     overwrite: true
+    #     source: .env
+    #     target: /home/${{ secrets.EC2_USERNAME }}/.env
 
     - name: Copy Updated Docker Compose File to  VM
       uses: appleboy/scp-action@v0.1.4
@@ -87,7 +87,7 @@ jobs:
          
           sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{ steps.be-image.outputs.IMAGE_NAME }}#' .env
 
-          
+
     #       # Pull the latest Docker image
     #       docker pull "${{ secrets.DOCKER_USERNAME }}/dotnet-app:latest"
 
