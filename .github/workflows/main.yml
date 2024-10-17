@@ -84,8 +84,7 @@ jobs:
         key: ${{ secrets.AWS_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
         script: |
-          [ -f .env ] && rm .env
-          echo "Bookstore_IMAGE_DEV=old_value" > .env
+
           sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{ steps.be-image.outputs.IMAGE_NAME }}#' .env
 
 
