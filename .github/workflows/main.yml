@@ -9,11 +9,11 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     environment: stag  
-    
+
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      BOOK_JSON: ${{ secrets.BOOK_JSON }} # Accessing the environment-specific variable
+      BOOK_JSON: ${{ secrets.BOOK_JSON }}
       PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY }}
 
     steps:
@@ -23,45 +23,44 @@ jobs:
     - name: Set up .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '8.0' 
-      
+        dotnet-version: '8.0'
 
     - name: Build Docker image
       id: be-image
       env:
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t  $DOCKER_USERNAME/bookstore-be:$IMAGE_TAG --label project=BOOKSTORE-BE .
-        echo "IMAGE_NAME=$DOCKER_USERNAME/bookstore-be:$IMAGE_TAG" >> $GITHUB_ENV # Store the image name in GitHub environment
-
+        docker build -t $DOCKER_USERNAME/bookstore-be:$IMAGE_TAG --label project=BOOKSTORE-BE .
+        echo "IMAGE_NAME=$DOCKER_USERNAME/bookstore-be:$IMAGE_TAG" >> $GITHUB_ENV
 
     - name: Log in to Docker Hub
       run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-  
+
     - name: Push Docker image to Docker Hub
-      run: docker push ${{env.IMAGE_NAME}}
-     
+      run: docker push ${{ env.IMAGE_NAME }}
+
     - name: Create var.env file from BOOK_JSON
       run: |
-        # Convert JSON to .env format
         echo "$BOOK_JSON" | jq -r '
           .ConnectionStrings.DefaultConnection as $conn |
           .Urls as $url |
           "CONNECTIONSTRINGS__DEFAULTCONNECTION=\($conn)\nURLS=\($url)"
         ' > var.env
-        
-    # - name: Copy .env File to VM
-    #   uses: appleboy/scp-action@v0.1.4
-    #   with:
-    #     host: ${{ secrets.EC2_HOST }}
-    #     username: ${{ secrets.EC2_USERNAME }}
-    #     key: ${{ secrets.AWS_PRIVATE_KEY }}
-    #     port: ${{ secrets.SSH_PORT }}
-    #     overwrite: true
-    #     source: .env
-    #     target: /home/${{ secrets.EC2_USERNAME }}/.env
 
-    - name: Copy Updated Docker Compose File to  VM
+    - name: Store current running image
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.AWS_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          # Get the currently running image
+          CURRENT_IMAGE=$(grep 'Bookstore_IMAGE_DEV=' /home/${{ secrets.EC2_USERNAME }}/Bookstore/.env | cut -d '=' -f2)
+          echo "CURRENT_IMAGE=$CURRENT_IMAGE" >> $GITHUB_ENV
+          echo "Stored the current image: $CURRENT_IMAGE"
+
+    - name: Copy Updated Docker Compose File to VM
       uses: appleboy/scp-action@v0.1.4
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -72,7 +71,7 @@ jobs:
         source: ./docker-compose.yaml
         target: /home/${{ secrets.EC2_USERNAME }}/Bookstore
 
-    - name: Copy Updated image env File to  VM
+    - name: Copy Updated var.env File to VM
       uses: appleboy/scp-action@v0.1.4
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -83,7 +82,7 @@ jobs:
         source: var.env
         target: /home/${{ secrets.EC2_USERNAME }}/Bookstore
 
-    - name: SSH into EC2 instance and deploy container
+    - name: SSH into EC2 instance and deploy new container
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -92,61 +91,57 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script: |
           cd Bookstore/
-          echo "Bookstore_IMAGE_DEV=old_value" > .env
-          sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{env.IMAGE_NAME}}#' .env
+          # Update the image in the .env file
+          sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{ env.IMAGE_NAME }}#' .env
+          # Deploy new version
           sudo docker-compose down
-          sudo docker-compose up --build
+          sudo docker-compose up -d --build
 
-    
+    - name: Check application health
+      id: health-check
+      run: |
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://your-application-url.com)
+        echo "Response code: $response"
+        echo "::set-output name=status::$response"
 
-    #       # Pull the latest Docker image
-    #       docker pull "${{ secrets.DOCKER_USERNAME }}/dotnet-app:latest"
+    - name: Rollback if health check fails
+      if: steps.health-check.outputs.status != '301'
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.AWS_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          cd Bookstore/
+          # Revert to the previous image
+          sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{ env.CURRENT_IMAGE }}#' .env
+          # Rollback deployment
+          sudo docker-compose down
+          sudo docker-compose up -d --build
 
-    #       # Stop and remove the existing container if it exists
-    #       if [ $(docker ps -q -f name=dotnet-app) ]; then
-    #         echo "Stopping the existing container"
-    #         docker stop dotnet-app
-    #         docker rm dotnet-app
-    #       fi
-          
-    #       # Run the new container
-    #       docker run --env-file /home/${{ secrets.EC2_USERNAME }}/.env -p 8080:8080 -d --name dotnet-app "${{ secrets.DOCKER_USERNAME }}/dotnet-app:latest"
+    - name: Send success email notification
+      if: steps.health-check.outputs.status == '301'
+      uses: dawidd6/action-send-mail@v2
+      with:
+        server_address: smtp.gmail.com
+        server_port: 465
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_APP_PASSWORD }}
+        subject: '${{ github.job }} job of ${{ github.repository }} has succeeded'
+        body: '${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has succeeded!'
+        to: pankajkumarnikk@gmail.com
+        from: sunny
 
-    #       # Remove .env file after deployment
-    #       rm /home/${{ secrets.EC2_USERNAME }}/.env
-
-    #       # Prune all unused Docker resources for this project
-    #       docker system prune -f --filter "label=project=dotnet-app"
-
-    # - name: Send failure notification
-    #   if: failure()
-    #   uses: dawidd6/action-send-mail@v2
-    #   with:
-    #     server_address: smtp.gmail.com
-    #     server_port: 465
-    #     username: ${{ secrets.EMAIL_USERNAME }}  # Your actual email address
-    #     password: ${{ secrets.EMAIL_APP_PASSWORD }}  # Use App Password here (not actual password )
-    #     subject: '${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}'
-    #     body: '${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}'
-    #     to: pankajkumarnikk@gmail.com
-    #     from: sunny  # Your name or the name you'd like to show      
-   
-    # - name: Check application health
-    #   id: health-check
-    #   run: |
-    #     response=$(curl -s -o /dev/null -w "%{http_code}" https://google.com)
-    #     echo "Response code: $response"
-    #     echo "::set-output name=status::$response"
-
-    # - name: Send success email notification
-    #   if: steps.health-check.outputs.status == '301'
-    #   uses: dawidd6/action-send-mail@v2
-    #   with:
-    #     server_address: smtp.gmail.com
-    #     server_port: 465
-    #     username: ${{ secrets.EMAIL_USERNAME }}  # Your actual email address
-    #     password: ${{ secrets.EMAIL_APP_PASSWORD }}  # Use App Password here
-    #     subject: '${{ github.job }} job of ${{ github.repository }} has succeeded'
-    #     body: '${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has succeeded!'
-    #     to: pankajkumarnikk@gmail.com
-    #     from: sunny  
+    - name: Send failure email notification
+      if: failure() || steps.health-check.outputs.status != '301'
+      uses: dawidd6/action-send-mail@v2
+      with:
+        server_address: smtp.gmail.com
+        server_port: 465
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_APP_PASSWORD }}
+        subject: '${{ github.job }} job of ${{ github.repository }} has failed'
+        body: '${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has failed'
+        to: pankajkumarnikk@gmail.com
+        from: sunny
