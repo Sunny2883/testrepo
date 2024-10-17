@@ -62,6 +62,17 @@ jobs:
         source: ./docker-compose.yaml
         target: /home/${{ secrets.EC2_USERNAME }}/docker-compose.yaml
 
+    - name: Copy Updated Docker Compose File to  VM
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.AWS_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        overwrite: true
+        source: image.env
+        target: /home/${{ secrets.EC2_USERNAME }}/image.env
+
     # - name: SSH into EC2 instance and deploy container
     #   uses: appleboy/ssh-action@master
     #   with:
