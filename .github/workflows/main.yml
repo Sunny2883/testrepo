@@ -143,7 +143,8 @@ jobs:
           cd Bookstore/
           # Revert to the previous image
           CURRENT_IMAGE=$(cat current_image.txt)
-          sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=$CURRENT_IMAGE #' .env
+          sed -i "s#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=$CURRENT_IMAGE #" .env
+
           # Rollback deployment
           sudo docker-compose down
           sudo docker-compose up -d --build
