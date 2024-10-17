@@ -7,14 +7,14 @@ services:
       - "8080:8080"
     env_file:
       - .env        # Load variables from .env
-      - ./var.env/var.env     # Load variables from var.env 
+      - var.env     # Load variables from var.env 
 
   postgres:
     image: postgres:latest
     ports:
       - 5432:5432
     env_file:
-      - ./var.env/var.env    # Load PostgreSQL configuration from var.env
+      - var.env    # Load PostgreSQL configuration from var.env
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Reference from var.env
       POSTGRES_USER: ${POSTGRES_USER}
