@@ -63,7 +63,7 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         overwrite: true
         source: ./docker-compose.yaml
-        target: /home/${{ secrets.EC2_USERNAME }}/docker-compose.yaml
+        target: /home/${{ secrets.EC2_USERNAME }}/Bookstore
 
     - name: Copy Updated image env File to  VM
       uses: appleboy/scp-action@v0.1.4
@@ -74,7 +74,7 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         overwrite: true
         source: var.env
-        target: /home/${{ secrets.EC2_USERNAME }}/var.env
+        target: /home/${{ secrets.EC2_USERNAME }}/Bookstore
 
     - name: SSH into EC2 instance and deploy container
       uses: appleboy/ssh-action@master
