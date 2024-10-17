@@ -32,13 +32,17 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
       run: |
         docker build -t bookstore-be:$IMAGE_TAG --label project=BOOKSTORE-BE .
-        echo "IMAGE_NAME=bookstore-be:${{ github.sha }}" >> $GITHUB_ENV # Store the image name in GitHub environment
+        echo "IMAGE_NAME=bookstore-be:$IMAGE_TAG" >> $GITHUB_ENV # Store the image name in GitHub environment
         echo "Bookstore_img=${{ env.IMAGE_NAME }}" >> image.env # Create or append to image.env
 
     - name: Create .env file from BOOK_JSON
       run: |
         # Convert JSON to .env format
-         jq -r 'to_entries | map("\(.key)=\(.value|tostring)") | .[]' <<< "$BOOK_JSON" > .env
+        echo "$BOOK_JSON" | jq -r '
+          .ConnectionStrings.DefaultConnection as $conn |
+          .Urls as $url |
+          "CONNECTIONSTRINGS__DEFAULTCONNECTION=\($conn)\nURLS=\($url)"
+        ' > .env
         
     - name: Copy .env File to VM
       uses: appleboy/scp-action@v0.1.4
