@@ -31,9 +31,16 @@ jobs:
       env:
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t bookstore-be:$IMAGE_TAG --label project=BOOKSTORE-BE .
-        echo "IMAGE_NAME=bookstore-be:$IMAGE_TAG" >> $GITHUB_ENV # Store the image name in GitHub environment
-        
+        docker build -t  $DOCKER_USERNAME/bookstore-be:$IMAGE_TAG --label project=BOOKSTORE-BE .
+        echo "IMAGE_NAME=$DOCKER_USERNAME/bookstore-be:$IMAGE_TAG" >> $GITHUB_ENV # Store the image name in GitHub environment
+
+
+    - name: Log in to Docker Hub
+      run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+  
+    - name: Push Docker image to Docker Hub
+      run: docker push $DOCKER_USERNAME/bookstore-be:$IMAGE_TAG
+     
     - name: Create var.env file from BOOK_JSON
       run: |
         # Convert JSON to .env format
