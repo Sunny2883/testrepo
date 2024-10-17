@@ -36,12 +36,17 @@ jobs:
         script: |
           # Extract the current image from the .env file
           CURRENT_IMAGE=$(grep 'Bookstore_IMAGE_DEV=' /home/${{ secrets.EC2_USERNAME }}/Bookstore/.env | cut -d '=' -f2)
+          if [ -z "$CURRENT_IMAGE" ]; then
+          echo "Failed to find the current image. Please check the .env file."
+          else
+          echo "Current image is: $CURRENT_IMAGE"
           echo "::set-output name=current_image::$CURRENT_IMAGE"
-      # Capture the output and store it in a GitHub Actions environment variable
+          fi
       
-      # Set the environment variable for future steps
     - name: Store the current image in GitHub Actions environment
-      run: echo "CURRENT_IMAGE=${{ steps.fetch-current-image.outputs.current_image_output }}" >> $GITHUB_ENV
+      if: success() && steps.fetch-current-image.outputs.current_image != ''
+      run: echo "CURRENT_IMAGE=${{ steps.fetch-current-image.outputs.current_image }}" >> $GITHUB_ENV
+    
       
 
     # - name: Build Docker image
@@ -157,15 +162,15 @@ jobs:
         to: pankajkumarnikk@gmail.com
         from: sunny
 
-    - name: Send failure email notification
-      if: failure() || steps.health-check.outputs.status != '301'
-      uses: dawidd6/action-send-mail@v2
-      with:
-        server_address: smtp.gmail.com
-        server_port: 465
-        username: ${{ secrets.EMAIL_USERNAME }}
-        password: ${{ secrets.EMAIL_APP_PASSWORD }}
-        subject: '${{ github.job }} job of ${{ github.repository }} has failed'
-        body: '${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has failed'
-        to: pankajkumarnikk@gmail.com
-        from: sunny
+    # - name: Send failure email notification
+    #   if: failure() || steps.health-check.outputs.status != '301'
+    #   uses: dawidd6/action-send-mail@v2
+    #   with:
+    #     server_address: smtp.gmail.com
+    #     server_port: 465
+    #     username: ${{ secrets.EMAIL_USERNAME }}
+    #     password: ${{ secrets.EMAIL_APP_PASSWORD }}
+    #     subject: '${{ github.job }} job of ${{ github.repository }} has failed'
+    #     body: '${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has failed'
+    #     to: pankajkumarnikk@gmail.com
+    #     from: sunny
