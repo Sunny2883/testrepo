@@ -119,14 +119,16 @@ jobs:
       if: steps.health-check.outputs.status != '301'
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.AWS_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
-        script: |
+         host: ${{ secrets.EC2_HOST }}
+         username: ${{ secrets.EC2_USERNAME }}
+         key: ${{ secrets.AWS_PRIVATE_KEY }}
+         port: ${{ secrets.SSH_PORT }}
+         script: |
           cd Bookstore/
           # Revert to the previous image
-          sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{ env.CURRENT_IMAGE }}#' .env
+          CURRENT_IMAGE=$(cat current_image.txt)
+          sed -i "s#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=$CURRENT_IMAGE #" .env
+
           # Rollback deployment
           sudo docker-compose down
           sudo docker-compose up -d --build
