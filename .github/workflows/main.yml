@@ -86,7 +86,7 @@ jobs:
         script: |
 
           sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${IMAGE_NAME}#' .env
-          EOF
+          
       env:
         IMAGE_NAME: ${{ env.IMAGE_NAME }} 
 
