@@ -100,7 +100,7 @@ jobs:
     - name: Check application health
       id: health-check
       run: |
-        response=$(curl -s -o /dev/null -w "%{http_code}" http://your-application-url.com)
+        response=$(curl -s -o /dev/null -w "%{http_code}" https://google.com)
         echo "Response code: $response"
         echo "::set-output name=status::$response"
 
