@@ -25,13 +25,13 @@ jobs:
       with:
         dotnet-version: '8.0'
 
-    - name: Build Docker image
-      id: be-image
-      env:
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t $DOCKER_USERNAME/bookstore-be:$IMAGE_TAG --label project=BOOKSTORE-BE .
-        echo "IMAGE_NAME=$DOCKER_USERNAME/bookstore-be:$IMAGE_TAG" >> $GITHUB_ENV
+    # - name: Build Docker image
+    #   id: be-image
+    #   env:
+    #     IMAGE_TAG: ${{ github.sha }}
+    #   run: |
+    #     docker build -t $DOCKER_USERNAME/bookstore-be:$IMAGE_TAG --label project=BOOKSTORE-BE .
+    #     echo "IMAGE_NAME=$DOCKER_USERNAME/bookstore-be:$IMAGE_TAG" >> $GITHUB_ENV
 
     - name: Log in to Docker Hub
       run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
@@ -113,6 +113,22 @@ jobs:
         key: ${{ secrets.AWS_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
         script: |
+          cd Bookstore/
+          # Revert to the previous image
+          sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{ env.CURRENT_IMAGE }}#' .env
+          # Rollback deployment
+          sudo docker-compose down
+          sudo docker-compose up -d --build
+
+    - name: Rollback if deployment fails
+      if: failure()  # This triggers on any step failure
+      uses: appleboy/ssh-action@master
+      with:
+         host: ${{ secrets.EC2_HOST }}
+         username: ${{ secrets.EC2_USERNAME }}
+         key: ${{ secrets.AWS_PRIVATE_KEY }}
+         port: ${{ secrets.SSH_PORT }}
+         script: |
           cd Bookstore/
           # Revert to the previous image
           sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{ env.CURRENT_IMAGE }}#' .env
