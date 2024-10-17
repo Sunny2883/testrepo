@@ -15,10 +15,7 @@ services:
       - 5432:5432
     env_file:
       - var.env    # Load PostgreSQL configuration from var.env
-    environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Reference from var.env
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_DB: ${POSTGRES_DB}
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
