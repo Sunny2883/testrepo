@@ -3,7 +3,7 @@ name: Build and Deploy .NET App to AWS EC2
 on:
   push:
     branches:
-      - feature-rollback
+      - feature-rollback-deployment
 
 jobs:
   build-and-deploy:
