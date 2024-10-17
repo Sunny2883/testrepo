@@ -59,8 +59,8 @@ jobs:
         key: ${{ secrets.AWS_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
         overwrite: true
-        source: ./docker-compose.yml
-        target: /home/${{ secrets.EC2_USERNAME }}/docker-compose.yml
+        source: ./docker-compose.yaml
+        target: /home/${{ secrets.EC2_USERNAME }}/docker-compose.yaml
 
     # - name: SSH into EC2 instance and deploy container
     #   uses: appleboy/ssh-action@master
