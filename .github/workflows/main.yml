@@ -33,7 +33,7 @@ jobs:
       run: |
         docker build -t bookstore-be:$IMAGE_TAG --label project=BOOKSTORE-BE .
         echo "IMAGE_NAME=bookstore-be:$IMAGE_TAG" >> $GITHUB_ENV # Store the image name in GitHub environment
-        sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{ steps.be-image.outputs.IMAGE_NAME }}#' .env
+        
     - name: Create var.env file from BOOK_JSON
       run: |
         # Convert JSON to .env format
@@ -76,15 +76,17 @@ jobs:
         source: .env
         target: /home/${{ secrets.EC2_USERNAME }}/.env
 
-    # - name: SSH into EC2 instance and deploy container
-    #   uses: appleboy/ssh-action@master
-    #   with:
-    #     host: ${{ secrets.EC2_HOST }}
-    #     username: ${{ secrets.EC2_USERNAME }}
-    #     key: ${{ secrets.AWS_PRIVATE_KEY }}
-    #     port: ${{ secrets.SSH_PORT }}
-    #     script: |
+    - name: SSH into EC2 instance and deploy container
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.AWS_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
          
+          sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{ steps.be-image.outputs.IMAGE_NAME }}#' .env
+
           
     #       # Pull the latest Docker image
     #       docker pull "${{ secrets.DOCKER_USERNAME }}/dotnet-app:latest"
