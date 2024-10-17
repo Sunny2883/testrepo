@@ -86,7 +86,9 @@ jobs:
         script: |
 
           sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{env.IMAGE_NAME}}#' .env
-          
+          sudo docker-compose -f ./docker-compose.yaml/docker-compose.yaml down
+          sudo docker-compose -f ./docker-compose.yaml/docker-compose.yaml up --build
+
     
 
     #       # Pull the latest Docker image
