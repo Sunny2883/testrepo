@@ -85,10 +85,9 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script: |
 
-          sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${IMAGE_NAME}#' .env
+          sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{env.IMAGE_NAME}}#' .env
           
-      env:
-        IMAGE_NAME: ${{ env.IMAGE_NAME }} 
+    
 
     #       # Pull the latest Docker image
     #       docker pull "${{ secrets.DOCKER_USERNAME }}/dotnet-app:latest"
