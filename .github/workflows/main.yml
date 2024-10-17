@@ -25,6 +25,19 @@ jobs:
       with:
         dotnet-version: '8.0'
 
+    - name: Store current running image
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.AWS_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          # Get the currently running image
+          CURRENT_IMAGE=$(grep 'Bookstore_IMAGE_DEV=' /home/${{ secrets.EC2_USERNAME }}/Bookstore/.env | cut -d '=' -f2)
+          echo "CURRENT_IMAGE=$CURRENT_IMAGE" >> $GITHUB_ENV
+          echo "Stored the current image: $CURRENT_IMAGE"
+
     # - name: Build Docker image
     #   id: be-image
     #   env:
@@ -47,18 +60,7 @@ jobs:
           "CONNECTIONSTRINGS__DEFAULTCONNECTION=\($conn)\nURLS=\($url)"
         ' > var.env
 
-    - name: Store current running image
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.AWS_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
-        script: |
-          # Get the currently running image
-          CURRENT_IMAGE=$(grep 'Bookstore_IMAGE_DEV=' /home/${{ secrets.EC2_USERNAME }}/Bookstore/.env | cut -d '=' -f2)
-          echo "CURRENT_IMAGE=$CURRENT_IMAGE" >> $GITHUB_ENV
-          echo "Stored the current image: $CURRENT_IMAGE"
+  
 
     - name: Copy Updated Docker Compose File to VM
       uses: appleboy/scp-action@v0.1.4
