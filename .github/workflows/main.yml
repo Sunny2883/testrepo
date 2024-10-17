@@ -85,7 +85,7 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script: |
 
-          sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{ steps.be-image.outputs.IMAGE_NAME }}#' .env
+          sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${IMAGE_NAME}#' .env
 
 
     #       # Pull the latest Docker image
