@@ -73,8 +73,8 @@ jobs:
         key: ${{ secrets.AWS_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
         overwrite: true
-        source: .env
-        target: /home/${{ secrets.EC2_USERNAME }}/.env
+        source: var.env
+        target: /home/${{ secrets.EC2_USERNAME }}/var.env
 
     - name: SSH into EC2 instance and deploy container
       uses: appleboy/ssh-action@master
