@@ -103,6 +103,7 @@ jobs:
         script: |
           cd Bookstore/
           # Update the image in the .env file
+          echo "Bookstore_IMAGE_DEV=old_value" > .env
           sed -i 's#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=${{ env.IMAGE_NAME }}#' .env
           # Deploy new version
           sudo docker-compose down
