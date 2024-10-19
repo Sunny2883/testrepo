@@ -108,7 +108,9 @@ jobs:
           # Deploy new version
           sudo docker-compose down
           sudo docker-compose up -d --build
-          # sudo docker prune -f --filter "label=project=QnA_bot"
+          sudo docker prune -f --filter "label=project=QnA_bot"
+
+          
     - name: Check application health
       id: health-check
       run: |
@@ -133,7 +135,7 @@ jobs:
           # Rollback deployment
           sudo docker-compose down
           sudo docker-compose up -d --build
-          # sudo docker prune -f --filter "label=project=QnA_bot"
+          sudo docker prune -f --filter "label=project=QnA_bot"
     # - name: Rollback if deployment fails
     #   if: failure()  # This triggers on any step failure
     #   uses: appleboy/ssh-action@master
