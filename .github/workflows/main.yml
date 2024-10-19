@@ -165,15 +165,15 @@ jobs:
     #     to: pankajkumarnikk@gmail.com
     #     from: sunny
 
-    # - name: Send failure email notification
-    #   if: failure() || steps.health-check.outputs.status != '301'
-    #   uses: dawidd6/action-send-mail@v2
-    #   with:
-    #     server_address: smtp.gmail.com
-    #     server_port: 465
-    #     username: ${{ secrets.EMAIL_USERNAME }}
-    #     password: ${{ secrets.EMAIL_APP_PASSWORD }}
-    #     subject: '${{ github.job }} job of ${{ github.repository }} has failed'
-    #     body: '${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has failed'
-    #     to: pankajkumarnikk@gmail.com
-    #     from: sunny
+    - name: Send failure email notification
+      if: failure() || steps.health-check.outputs.status != '301'
+      uses: dawidd6/action-send-mail@v2
+      with:
+        server_address: smtp.gmail.com
+        server_port: 465
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_APP_PASSWORD }}
+        subject: '${{ github.job }} job of ${{ github.repository }} has failed'
+        body: '${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has failed'
+        to: 5a53b3f2.promactinfotech1.onmicrosoft.com@in.teams.ms
+        from: sunny
