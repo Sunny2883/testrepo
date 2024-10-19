@@ -52,7 +52,7 @@ jobs:
       env:
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t $DOCKER_USERNAME/bookstore-be:$IMAGE_TAG --label project=BOOKSTORE-BE .
+        docker build -t $DOCKER_USERNAME/bookstore-be:$IMAGE_TAG --label project=QnA_bot .
         echo "IMAGE_NAME=$DOCKER_USERNAME/bookstore-be:$IMAGE_TAG" >> $GITHUB_ENV
 
     - name: Log in to Docker Hub
@@ -108,7 +108,7 @@ jobs:
           # Deploy new version
           sudo docker-compose down
           sudo docker-compose up -d --build
-
+          # sudo docker prune -f --filter "label=project=QnA_bot"
     - name: Check application health
       id: health-check
       run: |
@@ -133,7 +133,7 @@ jobs:
           # Rollback deployment
           sudo docker-compose down
           sudo docker-compose up -d --build
-
+          # sudo docker prune -f --filter "label=project=QnA_bot"
     # - name: Rollback if deployment fails
     #   if: failure()  # This triggers on any step failure
     #   uses: appleboy/ssh-action@master
@@ -165,15 +165,15 @@ jobs:
     #     to: pankajkumarnikk@gmail.com
     #     from: sunny
 
-    - name: Send failure email notification
-      if: failure() || steps.health-check.outputs.status != '301'
-      uses: dawidd6/action-send-mail@v2
-      with:
-        server_address: smtp.gmail.com
-        server_port: 465
-        username: ${{ secrets.EMAIL_USERNAME }}
-        password: ${{ secrets.EMAIL_APP_PASSWORD }}
-        subject: '${{ github.job }} job of ${{ github.repository }} has failed'
-        body: '${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has failed'
-        to: 5a53b3f2.promactinfotech1.onmicrosoft.com@in.teams.ms
-        from: sunny
+    # - name: Send failure email notification
+    #   if: failure() || steps.health-check.outputs.status != '301'
+    #   uses: dawidd6/action-send-mail@v2
+    #   with:
+    #     server_address: smtp.gmail.com
+    #     server_port: 465
+    #     username: ${{ secrets.EMAIL_USERNAME }}
+    #     password: ${{ secrets.EMAIL_APP_PASSWORD }}
+    #     subject: 'QnA bot Deployment status'
+    #     body: 'Deployment  has failed'
+    #     to: ${{ secrets.SMTP_TO }}
+    #     from: sunny
