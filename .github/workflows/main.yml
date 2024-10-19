@@ -25,35 +25,35 @@ jobs:
       with:
         dotnet-version: '8.0'
 
-    # - name: Get the currently running image
-    #   id: fetch-current-image
-    #   uses: appleboy/ssh-action@master
-    #   with:
-    #     host: ${{ secrets.EC2_HOST }}
-    #     username: ${{ secrets.EC2_USERNAME }}
-    #     key: ${{ secrets.AWS_PRIVATE_KEY }}
-    #     port: ${{ secrets.SSH_PORT }}
-    #     script: |
-    #       # Extract the current image from the .env file
-    #       CURRENT_IMAGE=$(grep 'Bookstore_IMAGE_DEV=' /home/${{ secrets.EC2_USERNAME }}/Bookstore/.env | cut -d '=' -f2)
-    #       if [ -z "$CURRENT_IMAGE" ]; then
-    #       echo "Failed to find the current image. Please check the .env file."
-    #       else
-    #       echo "Current image is: $CURRENT_IMAGE"
-    #       echo "::set-output name=current_image::$CURRENT_IMAGE"
-    #       fi
-    #       echo "$CURRENT_IMAGE" > /home/${{ secrets.EC2_USERNAME }}/Bookstore/current_image.txt
+    - name: Get the currently running image
+      id: fetch-current-image
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.AWS_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          # Extract the current image from the .env file
+          CURRENT_IMAGE=$(grep 'Bookstore_IMAGE_DEV=' /home/${{ secrets.EC2_USERNAME }}/Bookstore/.env | cut -d '=' -f2)
+          if [ -z "$CURRENT_IMAGE" ]; then
+          echo "Failed to find the current image. Please check the .env file."
+          else
+          echo "Current image is: $CURRENT_IMAGE"
+          echo "::set-output name=current_image::$CURRENT_IMAGE"
+          fi
+          echo "$CURRENT_IMAGE" > /home/${{ secrets.EC2_USERNAME }}/Bookstore/current_image.txt
 
     
       
 
-    - name: Build Docker image
-      id: be-image
-      env:
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t $DOCKER_USERNAME/bookstore-be:$IMAGE_TAG --label project=QnA_bot .
-        echo "IMAGE_NAME=$DOCKER_USERNAME/bookstore-be:$IMAGE_TAG" >> $GITHUB_ENV
+    # - name: Build Docker image
+    #   id: be-image
+    #   env:
+    #     IMAGE_TAG: ${{ github.sha }}
+    #   run: |
+    #     docker build -t $DOCKER_USERNAME/bookstore-be:$IMAGE_TAG --label project=QnA_bot .
+    #     echo "IMAGE_NAME=$DOCKER_USERNAME/bookstore-be:$IMAGE_TAG" >> $GITHUB_ENV
 
     - name: Log in to Docker Hub
       run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
@@ -136,23 +136,25 @@ jobs:
           sudo docker-compose down
           sudo docker-compose up -d --build
           sudo docker prune -f --filter "label=project=QnA_bot"
-    # - name: Rollback if deployment fails
-    #   if: failure()  # This triggers on any step failure
-    #   uses: appleboy/ssh-action@master
-    #   with:
-    #      host: ${{ secrets.EC2_HOST }}
-    #      username: ${{ secrets.EC2_USERNAME }}
-    #      key: ${{ secrets.AWS_PRIVATE_KEY }}
-    #      port: ${{ secrets.SSH_PORT }}
-    #      script: |
-    #       cd Bookstore/
-    #       # Revert to the previous image
-    #       CURRENT_IMAGE=$(cat current_image.txt)
-    #       sed -i "s#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=$CURRENT_IMAGE #" .env
 
-    #       # Rollback deployment
-    #       sudo docker-compose down
-    #       sudo docker-compose up -d --build
+
+    - name: Rollback if deployment fails
+      if: failure()  # This triggers on any step failure
+      uses: appleboy/ssh-action@master
+      with:
+         host: ${{ secrets.EC2_HOST }}
+         username: ${{ secrets.EC2_USERNAME }}
+         key: ${{ secrets.AWS_PRIVATE_KEY }}
+         port: ${{ secrets.SSH_PORT }}
+         script: |
+          cd Bookstore/
+          # Revert to the previous image
+          CURRENT_IMAGE=$(cat current_image.txt)
+          sed -i "s#Bookstore_IMAGE_DEV=.*#Bookstore_IMAGE_DEV=$CURRENT_IMAGE #" .env
+
+          # Rollback deployment
+          sudo docker-compose down
+          sudo docker-compose up -d --build
 
     # - name: Send success email notification
     #   if: steps.health-check.outputs.status == '301'
