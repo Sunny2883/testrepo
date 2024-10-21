@@ -154,7 +154,7 @@ jobs:
           sudo docker-compose up -d --build
 
     - name: Send success email notification
-      if: steps.health-check.outputs.status == '301'
+      if: steps.health-check.outputs.status == '301' || steps.health-check.outputs.status == '201' || steps.health-check.outputs.status == '202'
       uses: dawidd6/action-send-mail@v2
       with:
         server_address: smtp.gmail.com
@@ -167,7 +167,7 @@ jobs:
         from: sunny
 
     - name: Send failure email notification
-      if: failure() || steps.health-check.outputs.status != '301'
+      if: failure() || (steps.health-check.outputs.status != '301' && steps.health-check.outputs.status != '201' && steps.health-check.outputs.status != '202')
       uses: dawidd6/action-send-mail@v2
       with:
         server_address: smtp.gmail.com
