@@ -63,12 +63,7 @@ jobs:
 
     - name: Create var.env file from BOOK_JSON
       run: |
-        echo "$BOOK_JSON" | jq -r '
-          .ConnectionStrings.DefaultConnection as $conn |
-          .Urls as $url |
-          "CONNECTIONSTRINGS__DEFAULTCONNECTION=\($conn)\nURLS=\($url)"
-        ' > var.env
-
+         run: jq -r 'to_entries | map("\(.key)=\(.value | tojson | gsub("\""; ""))") | .[]' <<< "${{ env.BOOK_JSON }}" > .env
   
 
     - name: Copy Updated Docker Compose File to VM
