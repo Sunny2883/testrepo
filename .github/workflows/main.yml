@@ -111,9 +111,23 @@ jobs:
     - name: Check application health
       id: health-check
       run: |
-        response=$(curl -s -o /dev/null -w "%{http_code}" https://google.com)
-        echo "Response code: $response"
-        echo "::set-output name=status::$response"
+        
+        for i in {1..3}; do
+           response=$(curl -s -o /dev/null -w "%{http_code}" "https://google.com")
+           echo "Attempt $i: Response code: $response"
+
+           #  Set the status output to the response code
+           echo "::set-output name=status::$response"
+
+           # If the status is one of the success codes, break out of the loop
+           if [[ "$response" == "200" || "$response" == "201" || "$response" == "202" ]]; then
+             echo "Application is healthy."
+             break
+           fi
+
+           # Wait for 5 seconds before the next attempt if it's not successful
+           sleep 5
+        done
 
     - name: Rollback if health check fails
       if: steps.health-check.outputs.status != '301'
