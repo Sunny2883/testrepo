@@ -25,24 +25,24 @@ jobs:
       with:
         dotnet-version: '8.0'
 
-    - name: Get the currently running image
-      id: fetch-current-image
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.AWS_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
-        script: |
-          # Extract the current image from the .env file
-          CURRENT_IMAGE=$(grep 'Bookstore_IMAGE_DEV=' /home/${{ secrets.EC2_USERNAME }}/Bookstore/.env | cut -d '=' -f2)
-          if [ -z "$CURRENT_IMAGE" ]; then
-          echo "Failed to find the current image. Please check the .env file."
-          else
-          echo "Current image is: $CURRENT_IMAGE"
-          echo "::set-output name=current_image::$CURRENT_IMAGE"
-          fi
-          echo "$CURRENT_IMAGE" > /home/${{ secrets.EC2_USERNAME }}/Bookstore/current_image.txt
+    # - name: Get the currently running image
+    #   id: fetch-current-image
+    #   uses: appleboy/ssh-action@master
+    #   with:
+    #     host: ${{ secrets.EC2_HOST }}
+    #     username: ${{ secrets.EC2_USERNAME }}
+    #     key: ${{ secrets.AWS_PRIVATE_KEY }}
+    #     port: ${{ secrets.SSH_PORT }}
+    #     script: |
+    #       # Extract the current image from the .env file
+    #       CURRENT_IMAGE=$(grep 'Bookstore_IMAGE_DEV=' /home/${{ secrets.EC2_USERNAME }}/Bookstore/.env | cut -d '=' -f2)
+    #       if [ -z "$CURRENT_IMAGE" ]; then
+    #       echo "Failed to find the current image. Please check the .env file."
+    #       else
+    #       echo "Current image is: $CURRENT_IMAGE"
+    #       echo "::set-output name=current_image::$CURRENT_IMAGE"
+    #       fi
+    #       echo "$CURRENT_IMAGE" > /home/${{ secrets.EC2_USERNAME }}/Bookstore/current_image.txt
 
     
       
@@ -156,28 +156,28 @@ jobs:
           sudo docker-compose down
           sudo docker-compose up -d --build
 
-    # - name: Send success email notification
-    #   if: steps.health-check.outputs.status == '301'
-    #   uses: dawidd6/action-send-mail@v2
-    #   with:
-    #     server_address: smtp.gmail.com
-    #     server_port: 465
-    #     username: ${{ secrets.EMAIL_USERNAME }}
-    #     password: ${{ secrets.EMAIL_APP_PASSWORD }}
-    #     subject: '${{ github.job }} job of ${{ github.repository }} has succeeded'
-    #     body: '${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has succeeded!'
-    #     to: pankajkumarnikk@gmail.com
-    #     from: sunny
+    - name: Send success email notification
+      if: steps.health-check.outputs.status == '301'
+      uses: dawidd6/action-send-mail@v2
+      with:
+        server_address: smtp.gmail.com
+        server_port: 465
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_APP_PASSWORD }}
+        subject: '${{ github.job }} job of ${{ github.repository }} has succeeded'
+        body: '${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has succeeded!'
+        to: pankajkumarnikk@gmail.com
+        from: sunny
 
-    # - name: Send failure email notification
-    #   if: failure() || steps.health-check.outputs.status != '301'
-    #   uses: dawidd6/action-send-mail@v2
-    #   with:
-    #     server_address: smtp.gmail.com
-    #     server_port: 465
-    #     username: ${{ secrets.EMAIL_USERNAME }}
-    #     password: ${{ secrets.EMAIL_APP_PASSWORD }}
-    #     subject: 'QnA bot Deployment status'
-    #     body: 'Deployment  has failed'
-    #     to: ${{ secrets.SMTP_TO }}
-    #     from: sunny
+    - name: Send failure email notification
+      if: failure() || steps.health-check.outputs.status != '301'
+      uses: dawidd6/action-send-mail@v2
+      with:
+        server_address: smtp.gmail.com
+        server_port: 465
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_APP_PASSWORD }}
+        subject: 'QnA bot Deployment status'
+        body: 'Deployment  has failed'
+        to: pankajkumarnikk@gmail.com
+        from: sunny
